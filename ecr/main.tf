@@ -69,7 +69,7 @@ module "ecr_registry" {
   source  = "terraform-aws-modules/ecr/aws"
   version = "2.3.1"
 
-  create_repository = false
+  create_repository = true
 
   # Registry Policy
   create_registry_policy = true
@@ -81,12 +81,7 @@ module "ecr_registry" {
   registry_scan_rules = [
     {
       scan_frequency = "SCAN_ON_PUSH"
-      filter = [
-        {
-          filter      = "*fryrank*"
-          filter_type = "WILDCARD"
-        }
-      ]
+      filter = []
     }
   ]
 
