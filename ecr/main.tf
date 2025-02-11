@@ -40,12 +40,25 @@ module "ecr" {
     rules = [
       {
         rulePriority = 1,
-        description  = "Keep last 10 images",
+        description  = "Keep last 2 images for frontend",
         selection = {
           tagStatus     = "tagged",
-          tagPrefixList = ["v"],
+          tagPrefixList = ["fryrank-frontend"],
           countType     = "imageCountMoreThan",
-          countNumber   = 10
+          countNumber   = 2
+        },
+        action = {
+          type = "expire"
+        }
+      },
+      {
+        rulePriority = 2,
+        description  = "Keep last 2 images for backend",
+        selection = {
+          tagStatus     = "tagged",
+          tagPrefixList = ["fryrank-backend"],
+          countType     = "imageCountMoreThan",
+          countNumber   = 2
         },
         action = {
           type = "expire"
@@ -54,8 +67,6 @@ module "ecr" {
     ]
   })
 
-  repository_force_delete = true
-
   tags = local.tags
 }
 
@@ -63,17 +74,21 @@ module "ecr" {
 # ECR Registry
 ################################################################################
 
-data "aws_iam_policy_document" "registry" {}
-
 module "ecr_registry" {
   source  = "terraform-aws-modules/ecr/aws"
   version = "2.3.1"
 
-  create_repository = true
+  repository_name = local.name
+
+  create_repository = false
+  create_lifecycle_policy = false
 
   # Registry Policy
-  create_registry_policy = true
-  registry_policy        = data.aws_iam_policy_document.registry.json
+  create_registry_policy = false
+
+  # Repository Policy
+  create_repository_policy = false
+  repository_policy = jsonencode({})
 
   # Registry Scanning Configuration
   manage_registry_scanning_configuration = true
@@ -81,7 +96,12 @@ module "ecr_registry" {
   registry_scan_rules = [
     {
       scan_frequency = "SCAN_ON_PUSH"
-      filter = []
+      filter = [
+        {
+          filter      = "*"
+          filter_type = "WILDCARD"
+        }
+      ]
     }
   ]
 
